@@ -63,43 +63,16 @@ resource "aws_launch_template" "app_launch_template" {
     security_groups             = [aws_security_group.ec2_sg.id]
   }
 
-  user_data = base64encode(<<-EOF
-              #!/bin/bash
-              set -ex
-
-              # Install Node.js 18 and git
-              sudo yum update -y
-              curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
-              sudo yum install -y nodejs git
-
-# Download application (tar avoids git interactive auth prompt)
-cd /home/ec2-user
-curl -sL https://github.com/soumey-art/AWS-cloud-project/archive/main.tar.gz -o repo.tar.gz
-tar xzf repo.tar.gz
-mv AWS-cloud-project-main repo
-cd repo/app
-
-              # Write .env file
-              echo "PORT=${var.app_port}" > .env
-              echo "DB_HOST=${aws_db_instance.main.address}" >> .env
-              echo "DB_PORT=${var.db_port}" >> .env
-              echo "DB_NAME=${var.db_name}" >> .env
-              echo "DB_USER=${var.db_user}" >> .env
-              echo "DB_PASSWORD=${var.db_password}" >> .env
-              echo "S3_BUCKET_NAME=${aws_s3_bucket.main.bucket}" >> .env
-              echo "AWS_REGION=${var.aws_region}" >> .env
-
-              # Install dependencies and initialize database
-              npm install
-              node db/init.js
-
-              # Start with pm2 (survives reboot)
-              sudo npm install -g pm2
-              pm2 start server.js --name cloud-app
-              pm2 startup systemd -u ec2-user --hp /home/ec2-user
-              pm2 save
-              EOF
-  )
+  user_data = base64encode(templatefile("${path.module}/user_data.tftpl", {
+    app_port       = var.app_port
+    db_host        = aws_db_instance.main.address
+    db_port        = var.db_port
+    db_name        = var.db_name
+    db_user        = var.db_user
+    db_password    = var.db_password
+    s3_bucket_name = aws_s3_bucket.main.bucket
+    aws_region     = var.aws_region
+  }))
 
   lifecycle {
     create_before_destroy = true

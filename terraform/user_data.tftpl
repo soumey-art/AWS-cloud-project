@@ -1,0 +1,73 @@
+#!/bin/bash
+set -ex
+
+exec > /var/log/user-data.log 2>&1
+
+yum update -y
+curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
+yum install -y nodejs
+
+cd /home/ec2-user
+aws s3 cp s3://${s3_bucket_name}/app.tar.gz app.tar.gz
+mkdir -p repo && cd repo
+tar xzf ../app.tar.gz
+
+cat > .env << 'ENVEOF'
+PORT=${app_port}
+DB_HOST=${db_host}
+DB_PORT=${db_port}
+DB_NAME=${db_name}
+DB_USER=${db_user}
+DB_PASSWORD=${db_password}
+S3_BUCKET_NAME=${s3_bucket_name}
+AWS_REGION=${aws_region}
+ENVEOF
+
+npm install
+node db/init.js || echo "DB init failed (non-fatal)"
+
+npm install -g pm2
+pm2 start server.js --name cloud-app
+pm2 startup systemd -u ec2-user --hp /home/ec2-user
+pm2 save
+
+yum install -y amazon-cloudwatch-agent
+
+mkdir -p /opt/aws/amazon-cloudwatch-agent/etc
+cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json << 'CWEOF'
+{
+  "agent": {
+    "metrics_collection_interval": 60,
+    "run_as_user": "root"
+  },
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [
+          {
+            "file_path": "/var/log/user-data.log",
+            "log_group_name": "/ec2/app-logs",
+            "log_stream_name": "{instance_id}/user-data",
+            "timezone": "UTC"
+          },
+          {
+            "file_path": "/root/.pm2/logs/cloud-app-out.log",
+            "log_group_name": "/ec2/app-logs",
+            "log_stream_name": "{instance_id}/app-out",
+            "timezone": "UTC"
+          },
+          {
+            "file_path": "/root/.pm2/logs/cloud-app-error.log",
+            "log_group_name": "/ec2/app-logs",
+            "log_stream_name": "{instance_id}/app-error",
+            "timezone": "UTC"
+          }
+        ]
+      }
+    }
+  }
+}
+CWEOF
+
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+  -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
