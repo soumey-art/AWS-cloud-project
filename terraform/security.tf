@@ -2,7 +2,7 @@
 resource "aws_security_group" "alb_sg" {
   name        = "alb-security-group"
   description = "Perimeter wall allowing public web traffic"
-  vpc_id      = var.vpc_id # Assumes Vanrith defined this variable
+  vpc_id      = aws_vpc.main.id
 
   # Inbound: Allow HTTP from the internet
   ingress {
@@ -25,7 +25,7 @@ resource "aws_security_group" "alb_sg" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = [var.vpc_cidr_block]
+    cidr_blocks = [aws_vpc.main.cidr_block]
   }
 
   tags = {
@@ -37,12 +37,11 @@ resource "aws_security_group" "alb_sg" {
 resource "aws_security_group" "ec2_sg" {
   name        = "ec2-security-group"
   description = "Shields web servers, restricting access strictly to the ALB"
-  vpc_id      = var.vpc_id
+  vpc_id      = aws_vpc.main.id
 
-  # Inbound: Allow app traffic ONLY from the ALB Security Group ID
   ingress {
-    from_port       = 8080 # Adjust to Donal's specific application port if different
-    to_port         = 8080
+    from_port       = var.app_port
+    to_port         = var.app_port
     protocol        = "tcp"
     security_groups = [aws_security_group.alb_sg.id]
   }
@@ -64,12 +63,11 @@ resource "aws_security_group" "ec2_sg" {
 resource "aws_security_group" "rds_sg" {
   name        = "rds-security-group"
   description = "Isolates the database, restricting access strictly to the EC2 instances"
-  vpc_id      = var.vpc_id
+  vpc_id      = aws_vpc.main.id
 
-  # Inbound: Allow database traffic ONLY from the EC2 Security Group ID
   ingress {
-    from_port       = 5432 # Default for PostgreSQL (change to 3306 if using MySQL)
-    to_port         = 5432
+    from_port       = var.db_port
+    to_port         = var.db_port
     protocol        = "tcp"
     security_groups = [aws_security_group.ec2_sg.id]
   }

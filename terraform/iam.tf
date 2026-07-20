@@ -26,14 +26,16 @@ resource "aws_iam_policy" "s3_read_write_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect = [
+        Action = [
           "s3:GetObject",
-          "s3:PutObject"
+          "s3:PutObject",
+          "s3:DeleteObject",
+          "s3:ListBucket"
         ]
-        Effect   = "Allow"
+        Effect = "Allow"
         Resource = [
-          "${var.s3_bucket_arn}",
-          "${var.s3_bucket_arn}/*"
+          "${aws_s3_bucket.main.arn}",
+          "${aws_s3_bucket.main.arn}/*"
         ]
       }
     ]

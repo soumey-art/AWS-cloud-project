@@ -4,8 +4,8 @@ resource "aws_lb" "application_lb" {
   name               = "rith-project-alb"
   internal           = false
   load_balancer_type = "application"
-  security_groups    = [var.alb_security_group_id] 
-  subnets            = var.public_subnet_ids       
+  security_groups    = [aws_security_group.alb_sg.id]
+  subnets            = aws_subnet.public[*].id
 
   tags = {
     Project     = "Cloud-Project"
@@ -17,15 +17,15 @@ resource "aws_lb" "application_lb" {
 # 2. ALB TARGET GROUP
 # Configured to look for Donal's application port and track the /health endpoint.
 resource "aws_lb_target_group" "app_target_group" {
-  name        = "app-target-group"
-  port        = var.app_port # Coordinate with Donal for his application port
-  protocol    = "HTTP"
-  vpc_id      = var.vpc_id # Provided by Vanrith
+  name     = "app-target-group"
+  port     = var.app_port # Coordinate with Donal for his application port
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.main.id
 
   health_check {
     path                = "/health" # Mandatory path
     protocol            = "HTTP"
-    matcher             = "200"     # Expects HTTP 200
+    matcher             = "200" # Expects HTTP 200
     interval            = 30
     timeout             = 5
     healthy_threshold   = 3
@@ -55,21 +55,21 @@ resource "aws_launch_template" "app_launch_template" {
 
   # Attached profile managed by Soumey for CloudWatch and S3 access rules
   iam_instance_profile {
-    name = var.ec2_instance_profile_name
+    name = aws_iam_instance_profile.ec2_profile.name
   }
 
   # Security configurations isolated from public ingress by Soumey
   network_interfaces {
     associate_public_ip_address = false # Keeps servers hidden inside private subnets
-    security_groups             = [var.ec2_security_group_id]
+    security_groups             = [aws_security_group.ec2_sg.id]
   }
 
   # Startup runtime initialization script (Coordinate with Donal)
   user_data = base64encode(<<-EOF
               #!/bin/bash
               # Pass critical environment flags down to Donal's web runtime ecosystem
-              export DB_HOST=${var.rds_endpoint}
-              export S3_BUCKET_NAME=${var.s3_bucket_name}
+export DB_HOST=${aws_db_instance.main.endpoint}
+export S3_BUCKET_NAME=${aws_s3_bucket.main.bucket}
               
               # Donal's custom app boot commands and log pipeline anchors go below
               EOF
@@ -88,7 +88,7 @@ resource "aws_autoscaling_group" "app_asg" {
   min_size            = 2 # Minimum boundary
   max_size            = 4 # Maximum ceiling threshold
   target_group_arns   = [aws_lb_target_group.app_target_group.arn]
-  vpc_zone_identifier = var.private_subnet_ids # Provided by Vanrith
+  vpc_zone_identifier = aws_subnet.private[*].id
 
   launch_template {
     id      = aws_launch_template.app_launch_template.id
