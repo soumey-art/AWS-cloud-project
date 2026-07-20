@@ -3,7 +3,7 @@ require("dotenv").config();
 const express = require("express");
 const multer = require("multer");
 const pool = require("./db/pool");
-const { uploadProductImage } = require("./s3");
+const { uploadProductImage, getPresignedUrl } = require("./s3");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -34,7 +34,16 @@ app.get("/", async (req, res) => {
     const result = await pool.query(
       "SELECT id, name, description, price, image_url, created_at FROM products ORDER BY created_at DESC"
     );
-    res.render("index", { products: result.rows, error: null });
+    // Generate presigned URLs for product images (S3 bucket is not public)
+    const products = await Promise.all(
+      result.rows.map(async (p) => {
+        if (p.image_url) {
+          p.image_url = await getPresignedUrl(p.image_url);
+        }
+        return p;
+      })
+    );
+    res.render("index", { products, error: null });
   } catch (err) {
     console.error(err);
     res.render("index", { products: [], error: "Could not load products from the database." });
@@ -50,11 +59,11 @@ app.post("/products", upload.single("image"), async (req, res) => {
   }
 
   try {
-    const imageUrl = await uploadProductImage(req.file);
+    const imageKey = await uploadProductImage(req.file);
 
     await pool.query(
       "INSERT INTO products (name, description, price, image_url) VALUES ($1, $2, $3, $4)",
-      [name, description || "", price, imageUrl]
+      [name, description || "", price, imageKey]
     );
 
     res.redirect("/");
