@@ -51,7 +51,7 @@ resource "aws_lb_listener" "http_listener" {
 resource "aws_launch_template" "app_launch_template" {
   name_prefix   = "app-template"
   image_id      = "ami-0fd6240f599091088" # Amazon Linux 2023 x86_64
-  instance_type = "t2.micro"
+  instance_type = "t3.micro"
 
   # Attached profile managed by Soumey for CloudWatch and S3 access rules
   iam_instance_profile {
