@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Company Inventory Control System</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <header class="masthead">
+    <div class="stamp">
+      <span class="stamp-line">COMPANY</span>
+      <span class="stamp-line stamp-line--big">INVENTORY CONTROL SYSTEM</span>
+    </div>
+    <div class="masthead-meta">
+      <span>STOCK LEDGER</span>
+      <span class="dot">&bull;</span>
+      <span id="item-count"><%= products.length %> ITEM<%= products.length === 1 ? '' : 'S' %> ON RECORD</span>
+    </div>
+  </header>
+
+  <main class="floor">
+
+    <section class="intake" aria-labelledby="intake-heading">
+      <h2 id="intake-heading">
+        <span class="tag-number">TAG&nbsp;IN</span> New Product
+      </h2>
+
+      <form action="/products" method="POST" enctype="multipart/form-data" class="intake-form">
+        <label class="field">
+          <span class="field-label">Product name</span>
+          <input type="text" name="name" placeholder="Wireless Mouse" required>
+        </label>
+
+        <label class="field">
+          <span class="field-label">Description</span>
+          <input type="text" name="description" placeholder="High Performance">
+        </label>
+
+        <label class="field field--price">
+          <span class="field-label">Price (USD)</span>
+          <input type="number" name="price" step="0.01" min="0" placeholder="25.00" required>
+        </label>
+
+        <label class="field field--file">
+          <span class="field-label">Preview image</span>
+          <input type="file" name="image" accept="image/*">
+        </label>
+
+        <button type="submit" class="stamp-button">Log Into Inventory</button>
+      </form>
+
+      <% if (error) { %>
+        <p class="notice notice--error"><%= error %></p>
+      <% } %>
+    </section>
+
+    <section class="catalog" aria-labelledby="catalog-heading">
+      <h2 id="catalog-heading"><span class="tag-number">ON&nbsp;SHELF</span> Product Catalog</h2>
+
+      <% if (products.length === 0) { %>
+        <div class="empty-shelf">
+          <p>No products logged yet.</p>
+          <p class="empty-shelf-sub">Use the intake form to add the first item.</p>
+        </div>
+      <% } else { %>
+        <div class="card-grid">
+          <% products.forEach(function(p) { %>
+            <article class="product-card">
+              <div class="product-image">
+                <% if (p.image_url) { %>
+                  <img src="<%= p.image_url %>" alt="<%= p.name %>">
+                <% } else { %>
+                  <div class="no-image">NO IMAGE ON FILE</div>
+                <% } %>
+              </div>
+              <div class="product-details">
+                <h3><%= p.name %></h3>
+                <% if (p.description) { %>
+                  <p class="product-desc"><%= p.description %></p>
+                <% } %>
+                <div class="price-tag">$<%= Number(p.price).toFixed(2) %></div>
+                <div class="sku">SKU-<%= String(p.id).padStart(5, '0') %></div>
+              </div>
+            </article>
+          <% }); %>
+        </div>
+      <% } %>
+    </section>
+
+  </main>
+
+  <footer class="floor-footer">
+    <span>Stateless app tier &middot; RDS product data &middot; S3 product images</span>
+  </footer>
+
+</body>
+</html>
