@@ -63,14 +63,39 @@ resource "aws_launch_template" "app_launch_template" {
     security_groups             = [aws_security_group.ec2_sg.id]
   }
 
-  # Startup runtime initialization script (Coordinate with Donal)
   user_data = base64encode(<<-EOF
               #!/bin/bash
-              # Pass critical environment flags down to Donal's web runtime ecosystem
-export DB_HOST=${aws_db_instance.main.endpoint}
-export S3_BUCKET_NAME=${aws_s3_bucket.main.bucket}
-              
-              # Donal's custom app boot commands and log pipeline anchors go below
+              set -ex
+
+              # Install Node.js 18 and git
+              sudo yum update -y
+              curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
+              sudo yum install -y nodejs git
+
+              # Clone application
+              cd /home/ec2-user
+              git clone https://github.com/soumey-art/AWS-cloud-project.git repo
+              cd repo/app
+
+              # Write .env file
+              echo "PORT=${var.app_port}" > .env
+              echo "DB_HOST=${aws_db_instance.main.endpoint}" >> .env
+              echo "DB_PORT=${var.db_port}" >> .env
+              echo "DB_NAME=${var.db_name}" >> .env
+              echo "DB_USER=${var.db_user}" >> .env
+              echo "DB_PASSWORD=${var.db_password}" >> .env
+              echo "S3_BUCKET_NAME=${aws_s3_bucket.main.bucket}" >> .env
+              echo "AWS_REGION=${var.aws_region}" >> .env
+
+              # Install dependencies and initialize database
+              npm install
+              node db/init.js
+
+              # Start with pm2 (survives reboot)
+              sudo npm install -g pm2
+              pm2 start server.js --name cloud-app
+              pm2 startup systemd -u ec2-user --hp /home/ec2-user
+              pm2 save
               EOF
   )
 

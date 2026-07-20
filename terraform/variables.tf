@@ -31,13 +31,13 @@ variable "availability_zones" {
 variable "app_port" {
   description = "Application port for EC2 instances"
   type        = number
-  default     = 8080
+  default     = 3000
 }
 
 variable "db_name" {
   description = "Name of the database"
   type        = string
-  default     = "cloudprojectdb"
+  default     = "inventorydb"
 }
 
 variable "db_user" {
