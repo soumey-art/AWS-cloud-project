@@ -72,10 +72,12 @@ resource "aws_launch_template" "app_launch_template" {
               curl -fsSL https://rpm.nodesource.com/setup_18.x | sudo bash -
               sudo yum install -y nodejs git
 
-              # Clone application
-              cd /home/ec2-user
-              git clone https://github.com/soumey-art/AWS-cloud-project.git repo
-              cd repo/app
+# Download application (tar avoids git interactive auth prompt)
+cd /home/ec2-user
+curl -sL https://github.com/soumey-art/AWS-cloud-project/archive/main.tar.gz -o repo.tar.gz
+tar xzf repo.tar.gz
+mv AWS-cloud-project-main repo
+cd repo/app
 
               # Write .env file
               echo "PORT=${var.app_port}" > .env
