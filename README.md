@@ -1,87 +1,121 @@
-# AWS Cloud Project
+# AWS Cloud Project — Company Inventory Control System
 
-## AWS Scalable, Secure, and Highly Available Web Application
+A scalable, secure, highly available web application deployed on AWS using Terraform. Users can add products (name, description, price, image) stored in RDS (PostgreSQL) and S3 (images), served behind an Application Load Balancer across 2 AZs.
 
-This repository contains the Infrastructure as Code (IaC) configuration and application source code for a scalable, secure, and highly available web application deployed on Amazon Web Services (AWS) using Terraform.
+## Architecture
 
----
-
-## 🏗️ Architecture Overview
-
-The system is architected across **two Availability Zones (AZs)** to ensure high availability and resilience. The core architecture includes:
-
-- **VPC Configuration:** Isolated network setup featuring public subnets for external routing and private subnets for backend resources.
-- **Elastic Load Balancer (ALB):** Distributes incoming public HTTP web traffic across a dynamic fleet of web servers.
-- **Auto Scaling Group (ASG):** Automatically provisions, maintains, and recovers EC2 instances dynamically based on traffic parameters (Min: 2, Desired: 2, Max: 4).
-- **Data & Storage Layer:** Amazon RDS instance for application data retention and an Amazon S3 bucket for media asset uploads.
-- **Security Infrastructure:** Network firewalls via Security Groups and identity lifecycle permissions using IAM Instance Profiles strictly enforcing least-privilege principles.
-- **Observability Platform:** Integrated CloudWatch agents monitoring instance system health metrics, centralizing access/error logs, and managing critical thresholds via alarms.
-
----
-
-## 📂 Project Repository Structure
-
-The workspace is organized into explicit logical directories to facilitate smooth team collaboration across feature branches:
-
-```text
-aws-cloud-project/
-├── app/                  # Application runtime, dependencies, and stateless logic (Donal)
-├── terraform/            # Infrastructure as Code baseline modules (Vanrith)
-│   ├── provider.tf       # Cloud provider and version specifications
-│   ├── variables.tf      # Global parameters and variable definitions
-│   ├── outputs.tf        # Computed infrastructure deployment parameters
-│   ├── network.tf        # Baseline VPC and core routing infrastructure
-│   ├── security.tf       # Security Groups and firewall ingress/egress rules (Soumey)
-│   ├── iam.tf            # Least-privilege roles, policies, and profiles (Soumey)
-│   ├── compute.tf        # Launch templates, ALB, target groups, and ASG configurations (Dara)
-│   ├── storage.tf        # Isolated RDS databases and encrypted S3 bucket specifications
-│   └── monitoring.tf     # CloudWatch metrics, dashboards, and log groups (Omrin)
-├── docs/                 # Engineering architecture diagrams and cost summaries
-└── README.md             # Integration workflow and deployment guide
 ```
-🔒 Security Best Practices
-
-Our system strictly aligns with AWS security best practices and least-privilege design principles:
-
-1. Network Isolation: Public traffic is terminated strictly at the Application Load Balancer. EC2 instances only process requests coming from the ALB security group, and the Amazon RDS instance only accepts database queries originating from the EC2 web servers.
-2. Least-Privilege Profiles: EC2 nodes run on localized IAM Instance Profiles, avoiding embedded security credentials in application configurations.
-3. Credential Management: The configuration uses an untracked local terraform.tfvars file to parse sensitive parameters (like database credentials), preventing credential leaks on public/private repositories.
-
-🛠️ Deployment Instructions
-Prerequisites
-Terraform CLI installed locally.
-AWS CLI installed and configured with appropriate project deployment credentials.
-
-Step-by-Step Initialization
-1. Clone the repository and navigate to the infrastructure workspace:
-```Bash
-git clone <your-repository-url>
-cd aws-cloud-project/terraform
+Users → ALB (port 80, HTTP) → 2× EC2 t3.micro (port 3000) → RDS PostgreSQL 16.3
+                                  ↕
+                     S3 (product images — AES256 encrypted)
+                                  ↕
+                CloudWatch (logs, dashboard, 3 alarms + SNS)
 ```
 
-2. Initialize the backend providers and local configurations:
-   ```Bash
-   terraform init
-   ```
-3. Validate code syntax and configurations:
-   ```Bash
-   terraform validate
-   ```
-4. Perform a dry-run plan execution to preview infrastructural mutations:
-   ```Bash
-   terraform plan
-   ```
-5. Apply and build the cloud infrastructure:
-   ```Bash
-   terraform apply
-   ```
-👥 Team Work Assignments
-- Vanrith (Infrastructure Lead): Core VPC foundation, routing parameters, relational data layers, global variable integrations, and root module composition.
-- Dara (High Availability & Scaling): Compute layers, launch configurations, ALB listener routing rules, and auto-scaling scaling matrix validations.
-- Soumey (Security Engineer): Identity Access Management architecture, secure ingress/egress security profiles, and resource layer encryption rules.
-- Omrin (Monitoring & Logging): CloudWatch agent collection configurations, target error alarms, metric tracking, and operational dashboards.
-- Donal and Soumey (Software Deployment Lead): Stateless web application prototyping, API health endpoints, data routing procedures, and shell automation scripts.
+- **VPC**: 10.0.0.0/16 with public subnets (EC2) + private subnets (RDS), IGW for internet access
+- **EC2**: Amazon Linux 2023, t3.micro, public IPs, IAM instance profile (S3 + CloudWatch)
+- **Auto Scaling**: Min 2, Desired 2, Max 4, CPU target 60%
+- **RDS**: PostgreSQL 16.3, db.t3.micro, 20GB, not publicly accessible
+- **S3**: AES256 encrypted, Block Public Access enabled
+- **Security Groups**: ALB→EC2 (port 3000) → RDS (port 5432), least-privilege chain
+- **Monitoring**: CloudWatch Dashboard (6 widgets), 3 alarms (cpu-high, unhealthy-hosts, target-5xx), SNS topic
 
-📌 Notes
+## URLs
 
-This project demonstrates a production-style AWS architecture focused on scalability, security, high availability, and operational monitoring using Terraform as the Infrastructure as Code framework.
+| Resource | URL |
+|----------|-----|
+| Website | http://rith-project-alb-12515995.us-east-1.elb.amazonaws.com/ |
+| Health Check | http://rith-project-alb-12515995.us-east-1.elb.amazonaws.com/health |
+| API (JSON) | http://rith-project-alb-12515995.us-east-1.elb.amazonaws.com/api/products |
+| CloudWatch Dashboard | https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#dashboards:name=Rith-Cloud-Project-Dashboard |
+| GitHub | https://github.com/soumey-art/AWS-cloud-project |
+
+## Credentials (Keep Secret — Do Not Commit)
+
+| Variable | Value |
+|----------|-------|
+| DB Host | `rith-cloud-db.cunuksekskkl.us-east-1.rds.amazonaws.com` |
+| DB Port | 5432 |
+| DB Name | `inventorydb` |
+| DB User | `dbadmin` |
+| DB Password | `Qs-B3WLwxw1jJbeb4CegeFJXPgNua_TV` |
+| S3 Bucket | `rith-cloud-project-storage20260720051220960100000001` |
+| AWS Region | `us-east-1` |
+| AWS Account | `574548986883` |
+
+## Project Structure
+
+```
+rith-cloud-project/
+├── app/                        # Node.js/Express application code (Donal)
+│   ├── server.js               # Express server, port 3000
+│   ├── db/pool.js              # pg Pool with SSL config
+│   ├── db/init.js              # Creates products table
+│   ├── s3.js                   # S3 image upload (multer memory → S3)
+│   ├── views/index.ejs         # Homepage template
+│   └── package.json
+├── terraform/                  # Infrastructure as Code (Vanrith)
+│   ├── provider.tf             # AWS provider ~> 5.0
+│   ├── variables.tf            # Shared variables
+│   ├── outputs.tf              # ALB DNS, RDS endpoint, etc.
+│   ├── vpc.tf                  # VPC, subnets, IGW, route tables
+│   ├── security.tf             # 3 SGs (alb-sg, ec2-sg, rds-sg) — Soumey
+│   ├── iam.tf                  # IAM role, S3 policy, CW attachment — Soumey
+│   ├── compute.tf              # ALB, target group, listener, ASG — Dara
+│   ├── storage.tf              # RDS PostgreSQL + S3 — Vanrith
+│   ├── monitoring.tf           # CW dashboard, alarms, SNS — Omrin
+│   ├── user_data.tftpl         # Bootstrap script (Node.js, pm2, CW agent)
+│   └── terraform.tfvars.example
+├── README.md
+└── .gitignore
+```
+
+## Deployment
+
+```bash
+cd terraform
+cp terraform.tfvars.example terraform.tfvars   # fill in db_password
+terraform init
+terraform validate
+terraform plan
+terraform apply
+```
+
+## Testing Summary
+
+| Test | Result |
+|------|--------|
+| Website loads via ALB DNS | ✅ HTML page renders |
+| Health endpoint | ✅ `{"status":"healthy"}` HTTP 200 |
+| RDS insert + retrieve | ✅ 4 products stored |
+| S3 file upload | ✅ PNG stored in `products/` folder |
+| 2 healthy instances in 2 AZs | ✅ us-east-1a + us-east-1b |
+| CloudWatch logs collected | ✅ user-data, app-out, app-error streams |
+| Alarm ALARM→OK | ✅ `cpu-high` demonstrated |
+| Instance termination recovery | ✅ ASG replaces automatically |
+
+## Cost Estimate (Monthly)
+
+| Service | Spec | Cost |
+|---------|------|------|
+| EC2 (2× t3.micro) | 2 vCPU, 1GB RAM each | ~$30 |
+| Application Load Balancer | + data processing | ~$17 |
+| RDS (db.t3.micro) | PostgreSQL 16.3, 20GB SSD | ~$27 |
+| S3 | Minimal usage | ~$1 |
+| **Total** | | **~$75-80/mo** |
+
+## Team
+
+| Person | Role | Responsibilities |
+|--------|------|-----------------|
+| Vanrith | Infrastructure Lead | VPC, subnets, IGW, RDS, S3, Terraform integration |
+| Dara | High Availability & Scaling | ALB, Launch Template, ASG, scaling policy |
+| Soumey | Security | SGs, IAM roles, encryption, S3 block public access |
+| Omrin | Monitoring & Logging | CW dashboard, log group, 3 alarms, SNS topic |
+| Donal | Application Deployment | Node.js app, RDS queries, S3 upload, /health, pm2 |
+
+## Known Issues
+
+- S3 image URLs return 403 in browser (Block Public Access). Fix: use presigned URLs in the app.
+- No SNS email subscription confirmed (topic exists, needs email confirmation).
+- No formal failure recovery or scaling test documented.
