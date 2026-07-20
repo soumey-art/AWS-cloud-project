@@ -50,7 +50,7 @@ resource "aws_lb_listener" "http_listener" {
 # The blueprint blueprint that handles instances deployment.
 resource "aws_launch_template" "app_launch_template" {
   name_prefix   = "app-template"
-  image_id      = "ami-0c55b159cbfafe1f0" # Use your region's standard Amazon Linux or Ubuntu AMI[cite: 3, 4]
+  image_id      = "ami-0fd6240f599091088" # Amazon Linux 2023 x86_64
   instance_type = "t2.micro"
 
   # Attached profile managed by Soumey for CloudWatch and S3 access rules
