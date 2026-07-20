@@ -10,7 +10,7 @@ sudo yum install -y nodejs
 
 # 2. Clone the repository
 cd /home/ec2-user
-git clone https://github.com/<your-username>/AWS-cloud-project.git
+git clone https://github.com/soumey-art/AWS-cloud-project.git
 cd AWS-cloud-project/app
 
 # 3. Install dependencies
