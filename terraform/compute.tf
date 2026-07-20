@@ -79,7 +79,7 @@ resource "aws_launch_template" "app_launch_template" {
 
               # Write .env file
               echo "PORT=${var.app_port}" > .env
-              echo "DB_HOST=${aws_db_instance.main.endpoint}" >> .env
+              echo "DB_HOST=${aws_db_instance.main.address}" >> .env
               echo "DB_PORT=${var.db_port}" >> .env
               echo "DB_NAME=${var.db_name}" >> .env
               echo "DB_USER=${var.db_user}" >> .env
