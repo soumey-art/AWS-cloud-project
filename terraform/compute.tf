@@ -58,9 +58,8 @@ resource "aws_launch_template" "app_launch_template" {
     name = aws_iam_instance_profile.ec2_profile.name
   }
 
-  # Security configurations isolated from public ingress by Soumey
   network_interfaces {
-    associate_public_ip_address = false # Keeps servers hidden inside private subnets
+    associate_public_ip_address = true
     security_groups             = [aws_security_group.ec2_sg.id]
   }
 
@@ -88,7 +87,7 @@ resource "aws_autoscaling_group" "app_asg" {
   min_size            = 2 # Minimum boundary
   max_size            = 4 # Maximum ceiling threshold
   target_group_arns   = [aws_lb_target_group.app_target_group.arn]
-  vpc_zone_identifier = aws_subnet.private[*].id
+  vpc_zone_identifier = aws_subnet.public[*].id
 
   launch_template {
     id      = aws_launch_template.app_launch_template.id
