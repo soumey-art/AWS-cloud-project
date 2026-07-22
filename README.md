@@ -30,19 +30,6 @@ Users → ALB (port 80, HTTP) → 2× EC2 t3.micro (port 3000) → RDS PostgreSQ
 | CloudWatch Dashboard | https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#dashboards:name=Rith-Cloud-Project-Dashboard |
 | GitHub | https://github.com/soumey-art/AWS-cloud-project |
 
-## Credentials (Keep Secret — Do Not Commit)
-
-| Variable | Value |
-|----------|-------|
-| DB Host | `rith-cloud-db.cunuksekskkl.us-east-1.rds.amazonaws.com` |
-| DB Port | 5432 |
-| DB Name | `inventorydb` |
-| DB User | `dbadmin` |
-| DB Password | `Qs-B3WLwxw1jJbeb4CegeFJXPgNua_TV` |
-| S3 Bucket | `rith-cloud-project-storage20260720051220960100000001` |
-| AWS Region | `us-east-1` |
-| AWS Account | `574548986883` |
-
 ## Project Structure
 
 ```
