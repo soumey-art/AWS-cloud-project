@@ -33,7 +33,7 @@ Users → ALB (port 80, HTTP) → 2× EC2 t3.micro (port 3000) → RDS PostgreSQ
 ## Project Structure
 
 ```
-rith-cloud-project/
+AWS-cloud-project/
 ├── app/                        # Node.js/Express application code (Donal)
 │   ├── server.js               # Express server, port 3000
 │   ├── db/pool.js              # pg Pool with SSL config
