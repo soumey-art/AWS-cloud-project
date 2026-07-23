@@ -1,3 +1,15 @@
+resource "aws_ssm_parameter" "db_password" {
+  name  = "/rith-cloud-project/db-password"
+  type  = "SecureString"
+  value = var.db_password
+
+  tags = {
+    Project     = "Rith-Cloud-Project"
+    Environment = "Demo"
+    ManagedBy   = "Terraform"
+  }
+}
+
 resource "aws_s3_bucket" "main" {
   bucket_prefix = "rith-cloud-project-storage"
   force_destroy = true

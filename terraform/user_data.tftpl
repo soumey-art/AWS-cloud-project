@@ -12,13 +12,15 @@ aws s3 cp s3://${s3_bucket_name}/app.tar.gz app.tar.gz
 mkdir -p repo && cd repo
 tar xzf ../app.tar.gz
 
-cat > .env << 'ENVEOF'
+DB_PASSWORD=$(aws ssm get-parameter --name "/rith-cloud-project/db-password" --with-decryption --query "Parameter.Value" --output text)
+
+cat > .env << ENVEOF
 PORT=${app_port}
 DB_HOST=${db_host}
 DB_PORT=${db_port}
 DB_NAME=${db_name}
 DB_USER=${db_user}
-DB_PASSWORD=${db_password}
+DB_PASSWORD=$DB_PASSWORD
 S3_BUCKET_NAME=${s3_bucket_name}
 AWS_REGION=${aws_region}
 ENVEOF

@@ -65,8 +65,7 @@ resource "aws_launch_template" "app_launch_template" {
   }
 
   network_interfaces {
-    associate_public_ip_address = true
-    security_groups             = [aws_security_group.ec2_sg.id]
+    security_groups = [aws_security_group.ec2_sg.id]
   }
 
   user_data = base64encode(templatefile("${path.module}/user_data.tftpl", {
@@ -75,7 +74,6 @@ resource "aws_launch_template" "app_launch_template" {
     db_port        = var.db_port
     db_name        = var.db_name
     db_user        = var.db_user
-    db_password    = var.db_password
     s3_bucket_name = aws_s3_bucket.main.bucket
     aws_region     = var.aws_region
   }))
@@ -93,7 +91,7 @@ resource "aws_autoscaling_group" "app_asg" {
   min_size            = 2 # Minimum boundary
   max_size            = 4 # Maximum ceiling threshold
   target_group_arns   = [aws_lb_target_group.app_target_group.arn]
-  vpc_zone_identifier = aws_subnet.public[*].id
+  vpc_zone_identifier = aws_subnet.private[*].id
 
   launch_template {
     id      = aws_launch_template.app_launch_template.id
