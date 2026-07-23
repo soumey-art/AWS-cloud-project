@@ -9,14 +9,15 @@ Users → ALB (port 80, HTTP) → 2× EC2 t3.micro (port 3000) → RDS PostgreSQ
                                   ↕
                      S3 (product images — AES256 encrypted)
                                   ↕
-                CloudWatch (logs, dashboard, 3 alarms + SNS)
+                 CloudWatch (logs, dashboard, 3 alarms + SNS)
 ```
 
-- **VPC**: 10.0.0.0/16 with public subnets (EC2) + private subnets (RDS), IGW for internet access
-- **EC2**: Amazon Linux 2023, t3.micro, public IPs, IAM instance profile (S3 + CloudWatch)
+- **VPC**: 10.0.0.0/16 with public subnets (ALB, NAT) + private subnets (EC2, RDS), IGW + NAT Gateway for outbound internet
+- **EC2**: Amazon Linux 2023, t3.micro, private subnets, no public IPs, IAM instance profile (S3 + CloudWatch + SSM)
 - **Auto Scaling**: Min 2, Desired 2, Max 4, CPU target 60%
-- **RDS**: PostgreSQL 16.3, db.t3.micro, 20GB, not publicly accessible
+- **RDS**: PostgreSQL 16.3, db.t3.micro, 20GB, encrypted, not publicly accessible
 - **S3**: AES256 encrypted, Block Public Access enabled
+- **Secrets**: DB password stored in SSM Parameter Store (SecureString), fetched at boot
 - **Security Groups**: ALB→EC2 (port 3000) → RDS (port 5432), least-privilege chain
 - **Monitoring**: CloudWatch Dashboard (6 widgets), 3 alarms (cpu-high, unhealthy-hosts, target-5xx), SNS topic
 
@@ -88,9 +89,10 @@ terraform apply
 |---------|------|------|
 | EC2 (2× t3.micro) | 2 vCPU, 1GB RAM each | ~$30 |
 | Application Load Balancer | + data processing | ~$17 |
+| NAT Gateway | hourly + data processing | ~$32 |
 | RDS (db.t3.micro) | PostgreSQL 16.3, 20GB SSD | ~$27 |
 | S3 | Minimal usage | ~$1 |
-| **Total** | | **~$75-80/mo** |
+| **Total** | | **~$107-112/mo** |
 
 ## Team
 
