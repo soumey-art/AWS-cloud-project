@@ -54,7 +54,13 @@ resource "aws_iam_role_policy_attachment" "cloudwatch_attachment" {
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
 }
 
-# Step 4: Create the IAM Instance Profile
+# Step 4: Attach the SSM Managed Instance Policy (for AWS Systems Manager access)
+resource "aws_iam_role_policy_attachment" "ssm_attachment" {
+  role       = aws_iam_role.ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+# Step 5: Create the IAM Instance Profile
 # NOTE FOR DARA: Reference 'aws_iam_instance_profile.ec2_profile.name' in compute.tf
 resource "aws_iam_instance_profile" "ec2_profile" {
   name = "ec2-instance-profile"

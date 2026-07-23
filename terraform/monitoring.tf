@@ -21,7 +21,14 @@ resource "aws_sns_topic" "alarm_notifications" {
   }
 }
 
-# 3. CLOUDWATCH DASHBOARD
+# 3. SNS EMAIL SUBSCRIPTION (replace with your email to receive alarm notifications)
+resource "aws_sns_topic_subscription" "alarm_email" {
+  topic_arn = aws_sns_topic.alarm_notifications.arn
+  protocol  = "email"
+  endpoint  = "sovanrithronn@gmail.com"
+}
+
+# 4. CLOUDWATCH DASHBOARD
 resource "aws_cloudwatch_dashboard" "main" {
   dashboard_name = "Rith-Cloud-Project-Dashboard"
 
@@ -132,7 +139,7 @@ resource "aws_cloudwatch_dashboard" "main" {
   })
 }
 
-# 4. ALARM: High CPU > 70% for 10 min
+# 5. ALARM: High CPU > 70% for 10 min
 resource "aws_cloudwatch_metric_alarm" "cpu_high" {
   alarm_name                = "cpu-high"
   comparison_operator       = "GreaterThanThreshold"
@@ -158,7 +165,7 @@ resource "aws_cloudwatch_metric_alarm" "cpu_high" {
   }
 }
 
-# 5. ALARM: Unhealthy Host Count >= 1
+# 6. ALARM: Unhealthy Host Count >= 1
 resource "aws_cloudwatch_metric_alarm" "unhealthy_hosts" {
   alarm_name                = "unhealthy-hosts"
   comparison_operator       = "GreaterThanOrEqualToThreshold"
@@ -184,7 +191,7 @@ resource "aws_cloudwatch_metric_alarm" "unhealthy_hosts" {
   }
 }
 
-# 6. ALARM: Target 5XX above threshold
+# 7. ALARM: Target 5XX above threshold
 resource "aws_cloudwatch_metric_alarm" "target_5xx" {
   alarm_name                = "target-5xx"
   comparison_operator       = "GreaterThanThreshold"

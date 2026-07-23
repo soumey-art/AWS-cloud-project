@@ -30,6 +30,7 @@ Users → ALB (port 80, HTTP) → 2× EC2 t3.micro (port 3000) → RDS PostgreSQ
 | CloudWatch Dashboard | https://us-east-1.console.aws.amazon.com/cloudwatch/home?region=us-east-1#dashboards:name=Rith-Cloud-Project-Dashboard |
 | GitHub | https://github.com/soumey-art/AWS-cloud-project |
 
+
 ## Project Structure
 
 ```
@@ -104,5 +105,5 @@ terraform apply
 ## Known Issues
 
 - S3 image URLs return 403 in browser (Block Public Access). Fix: use presigned URLs in the app.
-- No SNS email subscription confirmed (topic exists, needs email confirmation).
+- SNS email subscription added but needs email confirmation (replace `your-email@example.com` in monitoring.tf).
 - No formal failure recovery or scaling test documented.
