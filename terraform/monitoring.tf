@@ -25,7 +25,7 @@ resource "aws_sns_topic" "alarm_notifications" {
 resource "aws_sns_topic_subscription" "alarm_email" {
   topic_arn = aws_sns_topic.alarm_notifications.arn
   protocol  = "email"
-  endpoint  = "sovanrithronn@gmail.com"
+  endpoint  = "soumey.rann@student.cadt.edu"
 }
 
 # 4. CLOUDWATCH DASHBOARD
